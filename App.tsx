@@ -625,23 +625,30 @@ export default function App() {
           </button>
         </div>
 
-        {/* TODAY TAB */}
+        {/* TODAY TAB — only upcoming, predictable matches */}
         {predictTab==="today"&&(()=>{
           const allM = getAllMatches();
-          const todays = allM.filter(m=>isMatchToday(m)).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
-          if (todays.length===0) return (
+          const upcoming = allM.filter(m=>!isMatchLocked(m)).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+          const todaysUpcoming = upcoming.filter(m=>isMatchToday(m));
+          const showList = todaysUpcoming.length>0 ? todaysUpcoming : upcoming.slice(0,2);
+          const fallback = todaysUpcoming.length===0;
+
+          if (showList.length===0) return (
             <div style={{...card,padding:32,textAlign:"center"}}>
-              <div style={{fontSize:36,marginBottom:12}}>📅</div>
-              <div style={{fontWeight:700,fontSize:16,marginBottom:8}}>No matches today</div>
-              <div style={{color:"#8b95a8",fontSize:13}}>Check the Group Stage or Knockout tabs for upcoming fixtures.</div>
+              <div style={{fontSize:36,marginBottom:12}}>🏁</div>
+              <div style={{fontWeight:700,fontSize:16,marginBottom:8}}>No upcoming matches</div>
+              <div style={{color:"#8b95a8",fontSize:13}}>All fixtures so far have kicked off. Check the Knockout tab once new rounds are added.</div>
             </div>
           );
           return (
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {todays.map(m=>{
-                const stage = KNOCKOUT_STAGES.find(s=>s.key===m.stage);
-                return <MatchCard key={m.id} match={m} stageColor={stage?.color}/>;
-              })}
+            <div>
+              {fallback&&<div style={{fontSize:12,color:"#8b95a8",marginBottom:12}}>No more matches today — here's what's coming up next:</div>}
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {showList.map(m=>{
+                  const stage = KNOCKOUT_STAGES.find(s=>s.key===m.stage);
+                  return <MatchCard key={m.id} match={m} stageColor={stage?.color}/>;
+                })}
+              </div>
             </div>
           );
         })()}
